@@ -27,7 +27,7 @@ const initStartValues = {
 function ResizeControl({
   nodeId,
   position,
-  variant = ResizeControlVariant.Handle,
+  variant = ResizeControlVariant.Pin,
   className,
   style = {},
   children,

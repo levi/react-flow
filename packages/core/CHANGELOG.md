@@ -21,7 +21,7 @@
 
 Most notable updates:
 
-- Handles: `isConnectableStart` and `isConnectableEnd` props to configure if you can start or end a connection at a certain handle
+- Pins: `isConnectableStart` and `isConnectableEnd` props to configure if you can start or end a connection at a certain handle
 - Edges: `updatable` option to enable updates for specific edges
 - useNodesInitialized: options to configure if hidden nodes should be included (false by default)
 
@@ -72,7 +72,7 @@ Most notable updates:
 
 ### Patch Changes
 
-- [`383a074a`](https://github.com/wbkd/react-flow/commit/383a074aeae6dbec8437fa08c7c8d8240838a84e) Thanks [@bcakmakoglu](https://github.com/bcakmakoglu)! - Check if prevClosestHandle exists in onPointerUp. Fixes connections getting stuck on last handle and connecting, even when out of connectionRadius
+- [`383a074a`](https://github.com/wbkd/react-flow/commit/383a074aeae6dbec8437fa08c7c8d8240838a84e) Thanks [@bcakmakoglu](https://github.com/bcakmakoglu)! - Check if prevClosestPin exists in onPointerUp. Fixes connections getting stuck on last handle and connecting, even when out of connectionRadius
 
 ## 11.5.3
 

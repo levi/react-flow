@@ -1,20 +1,20 @@
 import { memo } from 'react';
 
-import Handle from '../../components/Handle';
+import Pin from '../Pin';
 import { Position } from '../../types';
 import type { NodeProps } from '../../types';
 
 const DefaultNode = ({
   data,
   isConnectable,
-  targetPosition = Position.Top,
-  sourcePosition = Position.Bottom,
+  inputPosition = Position.Top,
+  outputPosition = Position.Bottom,
 }: NodeProps) => {
   return (
     <>
-      <Handle type="target" position={targetPosition} isConnectable={isConnectable} />
+      <Pin type="input" position={inputPosition} isConnectable={isConnectable} />
       {data?.label}
-      <Handle type="source" position={sourcePosition} isConnectable={isConnectable} />
+      <Pin type="output" position={outputPosition} isConnectable={isConnectable} />
     </>
   );
 };

@@ -41,8 +41,8 @@ export default (NodeComponent: ComponentType<NodeProps>) => {
     isConnectable,
     isFocusable,
     selectNodesOnDrag,
-    sourcePosition,
-    targetPosition,
+    outputPosition,
+    inputPosition,
     hidden,
     resizeObserver,
     dragHandle,
@@ -57,8 +57,8 @@ export default (NodeComponent: ComponentType<NodeProps>) => {
   }: WrapNodeProps) => {
     const store = useStoreApi();
     const nodeRef = useRef<HTMLDivElement>(null);
-    const prevSourcePosition = useRef(sourcePosition);
-    const prevTargetPosition = useRef(targetPosition);
+    const prevOutputPosition = useRef(outputPosition);
+    const prevInputPosition = useRef(inputPosition);
     const prevType = useRef(type);
     const hasPointerEvents = isSelectable || isDraggable || onClick || onMouseEnter || onMouseMove || onMouseLeave;
     const updatePositions = useUpdateNodePositions();
@@ -128,30 +128,30 @@ export default (NodeComponent: ComponentType<NodeProps>) => {
     }, [hidden]);
 
     useEffect(() => {
-      // when the user programmatically changes the source or handle position, we re-initialize the node
+      // when the user programmatically changes the output or pin position, we re-initialize the node
       const typeChanged = prevType.current !== type;
-      const sourcePosChanged = prevSourcePosition.current !== sourcePosition;
-      const targetPosChanged = prevTargetPosition.current !== targetPosition;
+      const outputPosChanged = prevOutputPosition.current !== outputPosition;
+      const inputPosChanged = prevInputPosition.current !== inputPosition;
 
-      if (nodeRef.current && (typeChanged || sourcePosChanged || targetPosChanged)) {
+      if (nodeRef.current && (typeChanged || outputPosChanged || inputPosChanged)) {
         if (typeChanged) {
           prevType.current = type;
         }
-        if (sourcePosChanged) {
-          prevSourcePosition.current = sourcePosition;
+        if (outputPosChanged) {
+          prevOutputPosition.current = outputPosition;
         }
-        if (targetPosChanged) {
-          prevTargetPosition.current = targetPosition;
+        if (inputPosChanged) {
+          prevInputPosition.current = inputPosition;
         }
         store.getState().updateNodeDimensions([{ id, nodeElement: nodeRef.current, forceUpdate: true }]);
       }
-    }, [id, type, sourcePosition, targetPosition]);
+    }, [id, type, outputPosition, inputPosition]);
 
     const dragging = useDrag({
       nodeRef,
       disabled: hidden || !isDraggable,
       noDragClassName,
-      handleSelector: dragHandle,
+      pinSelector: dragHandle,
       nodeId: id,
       isSelectable,
       selectNodesOnDrag,
@@ -209,8 +209,8 @@ export default (NodeComponent: ComponentType<NodeProps>) => {
             yPos={yPos}
             selected={selected}
             isConnectable={isConnectable}
-            sourcePosition={sourcePosition}
-            targetPosition={targetPosition}
+            outputPosition={outputPosition}
+            inputPosition={inputPosition}
             dragging={dragging}
             dragHandle={dragHandle}
             zIndex={zIndex}

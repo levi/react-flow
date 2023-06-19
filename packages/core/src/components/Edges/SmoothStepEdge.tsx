@@ -6,19 +6,19 @@ import { Position } from '../../types';
 import type { SmoothStepEdgeProps, XYPosition } from '../../types';
 
 export interface GetSmoothStepPathParams {
-  sourceX: number;
-  sourceY: number;
-  sourcePosition?: Position;
-  targetX: number;
-  targetY: number;
-  targetPosition?: Position;
+  outputX: number;
+  outputY: number;
+  outputPosition?: Position;
+  inputX: number;
+  inputY: number;
+  inputPosition?: Position;
   borderRadius?: number;
   centerX?: number;
   centerY?: number;
   offset?: number;
 }
 
-const handleDirections = {
+const pinDirections = {
   [Position.Left]: { x: -1, y: 0 },
   [Position.Right]: { x: 1, y: 0 },
   [Position.Top]: { x: 0, y: -1 },
@@ -26,18 +26,18 @@ const handleDirections = {
 };
 
 const getDirection = ({
-  source,
-  sourcePosition = Position.Bottom,
-  target,
+  output,
+  outputPosition = Position.Bottom,
+  input,
 }: {
-  source: XYPosition;
-  sourcePosition: Position;
-  target: XYPosition;
+  output: XYPosition;
+  outputPosition: Position;
+  input: XYPosition;
 }): XYPosition => {
-  if (sourcePosition === Position.Left || sourcePosition === Position.Right) {
-    return source.x < target.x ? { x: 1, y: 0 } : { x: -1, y: 0 };
+  if (outputPosition === Position.Left || outputPosition === Position.Right) {
+    return output.x < input.x ? { x: 1, y: 0 } : { x: -1, y: 0 };
   }
-  return source.y < target.y ? { x: 0, y: 1 } : { x: 0, y: -1 };
+  return output.y < input.y ? { x: 0, y: 1 } : { x: 0, y: -1 };
 };
 
 const distance = (a: XYPosition, b: XYPosition) => Math.sqrt(Math.pow(b.x - a.x, 2) + Math.pow(b.y - a.y, 2));
@@ -45,28 +45,28 @@ const distance = (a: XYPosition, b: XYPosition) => Math.sqrt(Math.pow(b.x - a.x,
 // ith this function we try to mimic a orthogonal edge routing behaviour
 // It's not as good as a real orthogonal edge routing but it's faster and good enough as a default for step and smooth step edges
 function getPoints({
-  source,
-  sourcePosition = Position.Bottom,
-  target,
-  targetPosition = Position.Top,
+  output,
+  outputPosition = Position.Bottom,
+  input,
+  inputPosition = Position.Top,
   center,
   offset,
 }: {
-  source: XYPosition;
-  sourcePosition: Position;
-  target: XYPosition;
-  targetPosition: Position;
+  output: XYPosition;
+  outputPosition: Position;
+  input: XYPosition;
+  inputPosition: Position;
   center: Partial<XYPosition>;
   offset: number;
 }): [XYPosition[], number, number, number, number] {
-  const sourceDir = handleDirections[sourcePosition];
-  const targetDir = handleDirections[targetPosition];
-  const sourceGapped: XYPosition = { x: source.x + sourceDir.x * offset, y: source.y + sourceDir.y * offset };
-  const targetGapped: XYPosition = { x: target.x + targetDir.x * offset, y: target.y + targetDir.y * offset };
+  const outputDir = pinDirections[outputPosition];
+  const inputDir = pinDirections[inputPosition];
+  const outputGapped: XYPosition = { x: output.x + outputDir.x * offset, y: output.y + outputDir.y * offset };
+  const inputGapped: XYPosition = { x: input.x + inputDir.x * offset, y: input.y + inputDir.y * offset };
   const dir = getDirection({
-    source: sourceGapped,
-    sourcePosition,
-    target: targetGapped,
+    output: outputGapped,
+    outputPosition,
+    input: inputGapped,
   });
   const dirAccessor = dir.x !== 0 ? 'x' : 'y';
   const currDir = dir[dirAccessor];
@@ -74,59 +74,59 @@ function getPoints({
   let points: XYPosition[] = [];
   let centerX, centerY;
   const [defaultCenterX, defaultCenterY, defaultOffsetX, defaultOffsetY] = getEdgeCenter({
-    sourceX: source.x,
-    sourceY: source.y,
-    targetX: target.x,
-    targetY: target.y,
+    outputX: output.x,
+    outputY: output.y,
+    inputX: input.x,
+    inputY: input.y,
   });
 
-  // opposite handle positions, default case
-  if (sourceDir[dirAccessor] * targetDir[dirAccessor] === -1) {
+  // opposite pin positions, default case
+  if (outputDir[dirAccessor] * inputDir[dirAccessor] === -1) {
     centerX = center.x || defaultCenterX;
     centerY = center.y || defaultCenterY;
     //    --->
     //    |
     // >---
     const verticalSplit: XYPosition[] = [
-      { x: centerX, y: sourceGapped.y },
-      { x: centerX, y: targetGapped.y },
+      { x: centerX, y: outputGapped.y },
+      { x: centerX, y: inputGapped.y },
     ];
     //    |
     //  ---
     //  |
     const horizontalSplit: XYPosition[] = [
-      { x: sourceGapped.x, y: centerY },
-      { x: targetGapped.x, y: centerY },
+      { x: outputGapped.x, y: centerY },
+      { x: inputGapped.x, y: centerY },
     ];
 
-    if (sourceDir[dirAccessor] === currDir) {
+    if (outputDir[dirAccessor] === currDir) {
       points = dirAccessor === 'x' ? verticalSplit : horizontalSplit;
     } else {
       points = dirAccessor === 'x' ? horizontalSplit : verticalSplit;
     }
   } else {
-    // sourceTarget means we take x from source and y from target, targetSource is the opposite
-    const sourceTarget: XYPosition[] = [{ x: sourceGapped.x, y: targetGapped.y }];
-    const targetSource: XYPosition[] = [{ x: targetGapped.x, y: sourceGapped.y }];
-    // this handles edges with same handle positions
+    // outputInput means we take x from output and y from input, inputOutput is the opposite
+    const outputInput: XYPosition[] = [{ x: outputGapped.x, y: inputGapped.y }];
+    const inputOutput: XYPosition[] = [{ x: inputGapped.x, y: outputGapped.y }];
+    // this pins edges with same pin positions
     if (dirAccessor === 'x') {
-      points = sourceDir.x === currDir ? targetSource : sourceTarget;
+      points = outputDir.x === currDir ? inputOutput : outputInput;
     } else {
-      points = sourceDir.y === currDir ? sourceTarget : targetSource;
+      points = outputDir.y === currDir ? outputInput : inputOutput;
     }
 
-    // these are conditions for handling mixed handle positions like Right -> Bottom for example
-    if (sourcePosition !== targetPosition) {
+    // these are conditions for handling mixed pin positions like Right -> Bottom for example
+    if (outputPosition !== inputPosition) {
       const dirAccessorOpposite = dirAccessor === 'x' ? 'y' : 'x';
-      const isSameDir = sourceDir[dirAccessor] === targetDir[dirAccessorOpposite];
-      const sourceGtTargetOppo = sourceGapped[dirAccessorOpposite] > targetGapped[dirAccessorOpposite];
-      const sourceLtTargetOppo = sourceGapped[dirAccessorOpposite] < targetGapped[dirAccessorOpposite];
-      const flipSourceTarget =
-        (sourceDir[dirAccessor] === 1 && ((!isSameDir && sourceGtTargetOppo) || (isSameDir && sourceLtTargetOppo))) ||
-        (sourceDir[dirAccessor] !== 1 && ((!isSameDir && sourceLtTargetOppo) || (isSameDir && sourceGtTargetOppo)));
+      const isSameDir = outputDir[dirAccessor] === inputDir[dirAccessorOpposite];
+      const outputGtInputOppo = outputGapped[dirAccessorOpposite] > inputGapped[dirAccessorOpposite];
+      const outputLtInputOppo = outputGapped[dirAccessorOpposite] < inputGapped[dirAccessorOpposite];
+      const flipSourceInput =
+        (outputDir[dirAccessor] === 1 && ((!isSameDir && outputGtInputOppo) || (isSameDir && outputLtInputOppo))) ||
+        (outputDir[dirAccessor] !== 1 && ((!isSameDir && outputLtInputOppo) || (isSameDir && outputGtInputOppo)));
 
-      if (flipSourceTarget) {
-        points = dirAccessor === 'x' ? sourceTarget : targetSource;
+      if (flipSourceInput) {
+        points = dirAccessor === 'x' ? outputInput : inputOutput;
       }
     }
 
@@ -134,7 +134,7 @@ function getPoints({
     centerY = points[0].y;
   }
 
-  const pathPoints = [source, sourceGapped, ...points, targetGapped, target];
+  const pathPoints = [output, outputGapped, ...points, inputGapped, input];
 
   return [pathPoints, centerX, centerY, defaultOffsetX, defaultOffsetY];
 }
@@ -161,22 +161,22 @@ function getBend(a: XYPosition, b: XYPosition, c: XYPosition, size: number): str
 }
 
 export function getSmoothStepPath({
-  sourceX,
-  sourceY,
-  sourcePosition = Position.Bottom,
-  targetX,
-  targetY,
-  targetPosition = Position.Top,
+  outputX,
+  outputY,
+  outputPosition = Position.Bottom,
+  inputX,
+  inputY,
+  inputPosition = Position.Top,
   borderRadius = 5,
   centerX,
   centerY,
   offset = 20,
 }: GetSmoothStepPathParams): [path: string, labelX: number, labelY: number, offsetX: number, offsetY: number] {
   const [points, labelX, labelY, offsetX, offsetY] = getPoints({
-    source: { x: sourceX, y: sourceY },
-    sourcePosition,
-    target: { x: targetX, y: targetY },
-    targetPosition,
+    output: { x: outputX, y: outputY },
+    outputPosition,
+    input: { x: inputX, y: inputY },
+    inputPosition,
     center: { x: centerX, y: centerY },
     offset,
   });
@@ -200,10 +200,10 @@ export function getSmoothStepPath({
 
 const SmoothStepEdge = memo(
   ({
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
+    outputX,
+    outputY,
+    inputX,
+    inputY,
     label,
     labelStyle,
     labelShowBg,
@@ -211,20 +211,20 @@ const SmoothStepEdge = memo(
     labelBgPadding,
     labelBgBorderRadius,
     style,
-    sourcePosition = Position.Bottom,
-    targetPosition = Position.Top,
+    outputPosition = Position.Bottom,
+    inputPosition = Position.Top,
     markerEnd,
     markerStart,
     pathOptions,
     interactionWidth,
   }: SmoothStepEdgeProps) => {
     const [path, labelX, labelY] = getSmoothStepPath({
-      sourceX,
-      sourceY,
-      sourcePosition,
-      targetX,
-      targetY,
-      targetPosition,
+      outputX,
+      outputY,
+      outputPosition,
+      inputX,
+      inputY,
+      inputPosition,
       borderRadius: pathOptions?.borderRadius,
       offset: pathOptions?.offset,
     });

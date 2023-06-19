@@ -10,7 +10,7 @@ import { internalsSymbol } from '../../utils';
 import type {
   ConnectionLineComponent,
   ConnectionStatus,
-  HandleType,
+  PinType,
   ReactFlowState,
   ReactFlowStore,
 } from '../../types';
@@ -18,7 +18,7 @@ import { Position, ConnectionLineType, ConnectionMode } from '../../types';
 
 type ConnectionLineProps = {
   nodeId: string;
-  handleType: HandleType;
+  pinType: PinType;
   type: ConnectionLineType;
   style?: CSSProperties;
   CustomComponent?: ConnectionLineComponent;
@@ -34,17 +34,17 @@ const oppositePosition = {
 
 const ConnectionLine = ({
   nodeId,
-  handleType,
+  pinType,
   style,
   type = ConnectionLineType.Bezier,
   CustomComponent,
   connectionStatus,
 }: ConnectionLineProps) => {
-  const { fromNode, handleId, toX, toY, connectionMode } = useStore(
+  const { fromNode, pinId, toX, toY, connectionMode } = useStore(
     useCallback(
       (s: ReactFlowStore) => ({
         fromNode: s.nodeInternals.get(nodeId),
-        handleId: s.connectionHandleId,
+        pinId: s.connectionPinId,
         toX: (s.connectionPosition.x - s.transform[0]) / s.transform[2],
         toY: (s.connectionPosition.y - s.transform[1]) / s.transform[2],
         connectionMode: s.connectionMode,
@@ -53,23 +53,23 @@ const ConnectionLine = ({
     ),
     shallow
   );
-  const fromHandleBounds = fromNode?.[internalsSymbol]?.handleBounds;
-  let handleBounds = fromHandleBounds?.[handleType];
+  const fromPinBounds = fromNode?.[internalsSymbol]?.pinBounds;
+  let pinBounds = fromPinBounds?.[pinType];
 
   if (connectionMode === ConnectionMode.Loose) {
-    handleBounds = handleBounds ? handleBounds : fromHandleBounds?.[handleType === 'source' ? 'target' : 'source'];
+    pinBounds = pinBounds ? pinBounds : fromPinBounds?.[pinType === 'output' ? 'input' : 'output'];
   }
 
-  if (!fromNode || !handleBounds) {
+  if (!fromNode || !pinBounds) {
     return null;
   }
 
-  const fromHandle = handleId ? handleBounds.find((d) => d.id === handleId) : handleBounds[0];
-  const fromHandleX = fromHandle ? fromHandle.x + fromHandle.width / 2 : (fromNode.width ?? 0) / 2;
-  const fromHandleY = fromHandle ? fromHandle.y + fromHandle.height / 2 : fromNode.height ?? 0;
-  const fromX = (fromNode.positionAbsolute?.x ?? 0) + fromHandleX;
-  const fromY = (fromNode.positionAbsolute?.y ?? 0) + fromHandleY;
-  const fromPosition = fromHandle?.position;
+  const fromPin = pinId ? pinBounds.find((d) => d.id === pinId) : pinBounds[0];
+  const fromPinX = fromPin ? fromPin.x + fromPin.width / 2 : (fromNode.width ?? 0) / 2;
+  const fromPinY = fromPin ? fromPin.y + fromPin.height / 2 : fromNode.height ?? 0;
+  const fromX = (fromNode.positionAbsolute?.x ?? 0) + fromPinX;
+  const fromY = (fromNode.positionAbsolute?.y ?? 0) + fromPinY;
+  const fromPosition = fromPin?.position;
   const toPosition = fromPosition ? oppositePosition[fromPosition] : null;
 
   if (!fromPosition || !toPosition) {
@@ -82,7 +82,7 @@ const ConnectionLine = ({
         connectionLineType={type}
         connectionLineStyle={style}
         fromNode={fromNode}
-        fromHandle={fromHandle}
+        fromPin={fromPin}
         fromX={fromX}
         fromY={fromY}
         toX={toX}
@@ -97,16 +97,16 @@ const ConnectionLine = ({
   let dAttr = '';
 
   const pathParams = {
-    sourceX: fromX,
-    sourceY: fromY,
-    sourcePosition: fromPosition,
-    targetX: toX,
-    targetY: toY,
-    targetPosition: toPosition,
+    outputX: fromX,
+    outputY: fromY,
+    outputPosition: fromPosition,
+    inputX: toX,
+    inputY: toY,
+    inputPosition: toPosition,
   };
 
   if (type === ConnectionLineType.Bezier) {
-    // we assume the destination position is opposite to the source position
+    // we assume the destination position is opposite to the output position
     [dAttr] = getBezierPath(pathParams);
   } else if (type === ConnectionLineType.Step) {
     [dAttr] = getSmoothStepPath({
@@ -135,7 +135,7 @@ type ConnectionLineWrapperProps = {
 
 const selector = (s: ReactFlowState) => ({
   nodeId: s.connectionNodeId,
-  handleType: s.connectionHandleType,
+  pinType: s.connectionPinType,
   nodesConnectable: s.nodesConnectable,
   connectionStatus: s.connectionStatus,
   width: s.width,
@@ -143,8 +143,8 @@ const selector = (s: ReactFlowState) => ({
 });
 
 function ConnectionLineWrapper({ containerStyle, style, type, component }: ConnectionLineWrapperProps) {
-  const { nodeId, handleType, nodesConnectable, width, height, connectionStatus } = useStore(selector, shallow);
-  const isValid = !!(nodeId && handleType && width && nodesConnectable);
+  const { nodeId, pinType, nodesConnectable, width, height, connectionStatus } = useStore(selector, shallow);
+  const isValid = !!(nodeId && pinType && width && nodesConnectable);
 
   if (!isValid) {
     return null;
@@ -160,7 +160,7 @@ function ConnectionLineWrapper({ containerStyle, style, type, component }: Conne
       <g className={cc(['react-flow__connection', connectionStatus])}>
         <ConnectionLine
           nodeId={nodeId}
-          handleType={handleType}
+          pinType={pinType}
           style={style}
           type={type}
           CustomComponent={component}

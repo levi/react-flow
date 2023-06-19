@@ -1,14 +1,14 @@
 import ResizeControl from './ResizeControl';
 import { ControlPosition, NodeResizerProps, ResizeControlVariant, ControlLinePosition } from './types';
 
-const handleControls: ControlPosition[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
+const pinControls: ControlPosition[] = ['top-left', 'top-right', 'bottom-left', 'bottom-right'];
 const lineControls: ControlLinePosition[] = ['top', 'right', 'bottom', 'left'];
 
 export default function NodeResizer({
   nodeId,
   isVisible = true,
-  handleClassName,
-  handleStyle,
+  pinClassName,
+  pinStyle,
   lineClassName,
   lineStyle,
   color,
@@ -48,11 +48,11 @@ export default function NodeResizer({
           onResizeEnd={onResizeEnd}
         />
       ))}
-      {handleControls.map((c) => (
+      {pinControls.map((c) => (
         <ResizeControl
           key={c}
-          className={handleClassName}
-          style={handleStyle}
+          className={pinClassName}
+          style={pinStyle}
           nodeId={nodeId}
           position={c}
           color={color}

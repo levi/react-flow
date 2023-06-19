@@ -7,41 +7,41 @@ import { useNodeId } from '../../contexts/NodeIdContext';
 import { handlePointerDown } from './handler';
 import { getHostForElement, isMouseEvent } from '../../utils';
 import { addEdge } from '../../utils/graph';
-import { type HandleProps, type Connection, type ReactFlowState, HandleType, Position } from '../../types';
-import { isValidHandle } from './utils';
+import { type PinProps, type Connection, type ReactFlowState, PinType, Position } from '../../types';
+import { isValidPin } from './utils';
 import { errorMessages } from '../../contants';
 
 const alwaysValid = () => true;
 
-export type HandleComponentProps = HandleProps & Omit<HTMLAttributes<HTMLDivElement>, 'id'>;
+export type PinComponentProps = PinProps & Omit<HTMLAttributes<HTMLDivElement>, 'id'>;
 
 const selector = (s: ReactFlowState) => ({
-  connectionStartHandle: s.connectionStartHandle,
+  connectionStartPin: s.connectionStartPin,
   connectOnClick: s.connectOnClick,
   noPanClassName: s.noPanClassName,
 });
 
 const connectingSelector =
-  (nodeId: string | null, handleId: string | null, type: HandleType) => (state: ReactFlowState) => {
+  (nodeId: string | null, pinId: string | null, type: PinType) => (state: ReactFlowState) => {
     const {
-      connectionStartHandle: startHandle,
-      connectionEndHandle: endHandle,
-      connectionClickStartHandle: clickHandle,
+      connectionStartPin: startPin,
+      connectionEndPin: endPin,
+      connectionClickStartPin: clickPin,
     } = state;
 
     return {
       connecting:
-        (startHandle?.nodeId === nodeId && startHandle?.handleId === handleId && startHandle?.type === type) ||
-        (endHandle?.nodeId === nodeId && endHandle?.handleId === handleId && endHandle?.type === type),
+        (startPin?.nodeId === nodeId && startPin?.pinId === pinId && startPin?.type === type) ||
+        (endPin?.nodeId === nodeId && endPin?.pinId === pinId && endPin?.type === type),
       clickConnecting:
-        clickHandle?.nodeId === nodeId && clickHandle?.handleId === handleId && clickHandle?.type === type,
+        clickPin?.nodeId === nodeId && clickPin?.pinId === pinId && clickPin?.type === type,
     };
   };
 
-const Handle = forwardRef<HTMLDivElement, HandleComponentProps>(
+const Pin = forwardRef<HTMLDivElement, PinComponentProps>(
   (
     {
-      type = 'source',
+      type = 'output',
       position = Position.Top,
       isValidConnection,
       isConnectable = true,
@@ -57,12 +57,12 @@ const Handle = forwardRef<HTMLDivElement, HandleComponentProps>(
     },
     ref
   ) => {
-    const handleId = id || null;
-    const isTarget = type === 'target';
+    const pinId = id || null;
+    const isInput = type === 'input';
     const store = useStoreApi();
     const nodeId = useNodeId();
     const { connectOnClick, noPanClassName } = useStore(selector, shallow);
-    const { connecting, clickConnecting } = useStore(connectingSelector(nodeId, handleId, type), shallow);
+    const { connecting, clickConnecting } = useStore(connectingSelector(nodeId, pinId, type), shallow);
 
     if (!nodeId) {
       store.getState().onError?.('010', errorMessages['error010']());
@@ -94,10 +94,10 @@ const Handle = forwardRef<HTMLDivElement, HandleComponentProps>(
       if (isConnectableStart && ((isMouseTriggered && event.button === 0) || !isMouseTriggered)) {
         handlePointerDown({
           event,
-          handleId,
+          pinId,
           nodeId,
           onConnect: onConnectExtended,
-          isTarget,
+          isInput: isInput,
           getState: store.getState,
           setState: store.setState,
           isValidConnection: isValidConnection || store.getState().isValidConnection || alwaysValid,
@@ -115,34 +115,34 @@ const Handle = forwardRef<HTMLDivElement, HandleComponentProps>(
       const {
         onClickConnectStart,
         onClickConnectEnd,
-        connectionClickStartHandle,
+        connectionClickStartPin,
         connectionMode,
         isValidConnection: isValidConnectionStore,
       } = store.getState();
 
-      if (!nodeId || (!connectionClickStartHandle && !isConnectableStart)) {
+      if (!nodeId || (!connectionClickStartPin && !isConnectableStart)) {
         return;
       }
 
-      if (!connectionClickStartHandle) {
-        onClickConnectStart?.(event, { nodeId, handleId, handleType: type });
-        store.setState({ connectionClickStartHandle: { nodeId, type, handleId } });
+      if (!connectionClickStartPin) {
+        onClickConnectStart?.(event, { nodeId, pinId, pinType: type });
+        store.setState({ connectionClickStartPin: { nodeId, type, pinId } });
         return;
       }
 
       const doc = getHostForElement(event.target as HTMLElement);
       const isValidConnectionHandler = isValidConnection || isValidConnectionStore || alwaysValid;
-      const { connection, isValid } = isValidHandle(
+      const { connection, isValid } = isValidPin(
         event,
         {
           nodeId,
-          id: handleId,
+          id: pinId,
           type,
         },
         connectionMode,
-        connectionClickStartHandle.nodeId,
-        connectionClickStartHandle.handleId || null,
-        connectionClickStartHandle.type,
+        connectionClickStartPin.nodeId,
+        connectionClickStartPin.pinId || null,
+        connectionClickStartPin.type,
         isValidConnectionHandler,
         doc
       );
@@ -153,29 +153,29 @@ const Handle = forwardRef<HTMLDivElement, HandleComponentProps>(
 
       onClickConnectEnd?.(event as unknown as MouseEvent);
 
-      store.setState({ connectionClickStartHandle: null });
+      store.setState({ connectionClickStartPin: null });
     };
 
     return (
       <div
-        data-handleid={handleId}
+        data-pinid={pinId}
         data-nodeid={nodeId}
-        data-handlepos={position}
-        data-id={`${nodeId}-${handleId}-${type}`}
+        data-pinpos={position}
+        data-id={`${nodeId}-${pinId}-${type}`}
         className={cc([
-          'react-flow__handle',
-          `react-flow__handle-${position}`,
+          'react-flow__pin',
+          `react-flow__pin-${position}`,
           'nodrag',
           noPanClassName,
           className,
           {
-            source: !isTarget,
-            target: isTarget,
+            output: !isInput,
+            input: isInput,
             connectable: isConnectable,
             connectablestart: isConnectableStart,
             connectableend: isConnectableEnd,
             connecting: clickConnecting,
-            // this class is used to style the handle when the user is connecting
+            // this class is used to style the pin when the user is connecting
             connectionindicator:
               isConnectable && ((isConnectableStart && !connecting) || (isConnectableEnd && connecting)),
           },
@@ -192,6 +192,6 @@ const Handle = forwardRef<HTMLDivElement, HandleComponentProps>(
   }
 );
 
-Handle.displayName = 'Handle';
+Pin.displayName = 'Pin';
 
-export default memo(Handle);
+export default memo(Pin);

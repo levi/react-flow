@@ -1,41 +1,41 @@
-import { MouseEvent, RefObject } from 'react';
-import { StoreApi } from 'zustand';
+import { MouseEvent, RefObject } from 'react'
+import { StoreApi } from 'zustand'
 
-import { getDimensions } from '../../utils';
-import { Position } from '../../types';
-import type { HandleElement, Node, NodeOrigin, ReactFlowState } from '../../types';
+import { getDimensions } from '../../utils'
+import { Position } from '../../types'
+import type { PinElement, Node, NodeOrigin, ReactFlowState } from '../../types'
 
-export const getHandleBounds = (
+export const getPinBounds = (
   selector: string,
   nodeElement: HTMLDivElement,
   zoom: number,
   nodeOrigin: NodeOrigin
-): HandleElement[] | null => {
-  const handles = nodeElement.querySelectorAll(selector);
+): PinElement[] | null => {
+  const pins = nodeElement.querySelectorAll(selector)
 
-  if (!handles || !handles.length) {
-    return null;
+  if (!pins || !pins.length) {
+    return null
   }
 
-  const handlesArray = Array.from(handles) as HTMLDivElement[];
-  const nodeBounds = nodeElement.getBoundingClientRect();
+  const pinsArray = Array.from(pins) as HTMLDivElement[]
+  const nodeBounds = nodeElement.getBoundingClientRect()
   const nodeOffset = {
     x: nodeBounds.width * nodeOrigin[0],
     y: nodeBounds.height * nodeOrigin[1],
-  };
+  }
 
-  return handlesArray.map((handle): HandleElement => {
-    const handleBounds = handle.getBoundingClientRect();
+  return pinsArray.map((pin): PinElement => {
+    const pinBounds = pin.getBoundingClientRect()
 
     return {
-      id: handle.getAttribute('data-handleid'),
-      position: handle.getAttribute('data-handlepos') as unknown as Position,
-      x: (handleBounds.left - nodeBounds.left - nodeOffset.x) / zoom,
-      y: (handleBounds.top - nodeBounds.top - nodeOffset.y) / zoom,
-      ...getDimensions(handle),
-    };
-  });
-};
+      id: pin.getAttribute('data-pinid'),
+      position: pin.getAttribute('data-pinpos') as unknown as Position,
+      x: (pinBounds.left - nodeBounds.left - nodeOffset.x) / zoom,
+      y: (pinBounds.top - nodeBounds.top - nodeOffset.y) / zoom,
+      ...getDimensions(pin),
+    }
+  })
+}
 
 export function getMouseHandler(
   id: string,
@@ -45,9 +45,9 @@ export function getMouseHandler(
   return handler === undefined
     ? handler
     : (event: MouseEvent) => {
-        const node = getState().nodeInternals.get(id)!;
-        handler(event, { ...node });
-      };
+      const node = getState().nodeInternals.get(id)!
+      handler(event, { ...node })
+    }
 }
 
 // this handler is called by
@@ -60,24 +60,24 @@ export function handleNodeClick({
   unselect = false,
   nodeRef,
 }: {
-  id: string;
+  id: string
   store: {
-    getState: StoreApi<ReactFlowState>['getState'];
-    setState: StoreApi<ReactFlowState>['setState'];
-  };
-  unselect?: boolean;
-  nodeRef?: RefObject<HTMLDivElement>;
+    getState: StoreApi<ReactFlowState>['getState']
+    setState: StoreApi<ReactFlowState>['setState']
+  }
+  unselect?: boolean
+  nodeRef?: RefObject<HTMLDivElement>
 }) {
-  const { addSelectedNodes, unselectNodesAndEdges, multiSelectionActive, nodeInternals } = store.getState();
-  const node = nodeInternals.get(id)!;
+  const { addSelectedNodes, unselectNodesAndEdges, multiSelectionActive, nodeInternals } = store.getState()
+  const node = nodeInternals.get(id)!
 
-  store.setState({ nodesSelectionActive: false });
+  store.setState({ nodesSelectionActive: false })
 
   if (!node.selected) {
-    addSelectedNodes([id]);
+    addSelectedNodes([id])
   } else if (unselect || (node.selected && multiSelectionActive)) {
-    unselectNodesAndEdges({ nodes: [node] });
+    unselectNodesAndEdges({ nodes: [node] })
 
-    requestAnimationFrame(() => nodeRef?.current?.blur());
+    requestAnimationFrame(() => nodeRef?.current?.blur())
   }
 }

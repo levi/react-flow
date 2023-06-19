@@ -6,12 +6,12 @@ import { Position } from '../../types';
 import type { EdgeProps } from '../../types';
 
 export interface GetSimpleBezierPathParams {
-  sourceX: number;
-  sourceY: number;
-  sourcePosition?: Position;
-  targetX: number;
-  targetY: number;
-  targetPosition?: Position;
+  outputX: number;
+  outputY: number;
+  outputPosition?: Position;
+  inputX: number;
+  inputY: number;
+  inputPosition?: Position;
 }
 
 interface GetControlParams {
@@ -31,40 +31,40 @@ function getControl({ pos, x1, y1, x2, y2 }: GetControlParams): [number, number]
 }
 
 export function getSimpleBezierPath({
-  sourceX,
-  sourceY,
-  sourcePosition = Position.Bottom,
-  targetX,
-  targetY,
-  targetPosition = Position.Top,
+  outputX,
+  outputY,
+  outputPosition = Position.Bottom,
+  inputX,
+  inputY,
+  inputPosition = Position.Top,
 }: GetSimpleBezierPathParams): [path: string, labelX: number, labelY: number, offsetX: number, offsetY: number] {
-  const [sourceControlX, sourceControlY] = getControl({
-    pos: sourcePosition,
-    x1: sourceX,
-    y1: sourceY,
-    x2: targetX,
-    y2: targetY,
+  const [outputControlX, outputControlY] = getControl({
+    pos: outputPosition,
+    x1: outputX,
+    y1: outputY,
+    x2: inputX,
+    y2: inputY,
   });
-  const [targetControlX, targetControlY] = getControl({
-    pos: targetPosition,
-    x1: targetX,
-    y1: targetY,
-    x2: sourceX,
-    y2: sourceY,
+  const [inputControlX, inputControlY] = getControl({
+    pos: inputPosition,
+    x1: inputX,
+    y1: inputY,
+    x2: outputX,
+    y2: outputY,
   });
   const [labelX, labelY, offsetX, offsetY] = getBezierEdgeCenter({
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    sourceControlX,
-    sourceControlY,
-    targetControlX,
-    targetControlY,
+    outputX,
+    outputY,
+    inputX,
+    inputY,
+    outputControlX: outputControlX,
+    outputControlY: outputControlY,
+    inputControlX: inputControlX,
+    inputControlY: inputControlY,
   });
 
   return [
-    `M${sourceX},${sourceY} C${sourceControlX},${sourceControlY} ${targetControlX},${targetControlY} ${targetX},${targetY}`,
+    `M${outputX},${outputY} C${outputControlX},${outputControlY} ${inputControlX},${inputControlY} ${inputX},${inputY}`,
     labelX,
     labelY,
     offsetX,
@@ -74,12 +74,12 @@ export function getSimpleBezierPath({
 
 const SimpleBezierEdge = memo(
   ({
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    sourcePosition = Position.Bottom,
-    targetPosition = Position.Top,
+    outputX,
+    outputY,
+    inputX,
+    inputY,
+    outputPosition = Position.Bottom,
+    inputPosition = Position.Top,
     label,
     labelStyle,
     labelShowBg,
@@ -92,12 +92,12 @@ const SimpleBezierEdge = memo(
     interactionWidth,
   }: EdgeProps) => {
     const [path, labelX, labelY] = getSimpleBezierPath({
-      sourceX,
-      sourceY,
-      sourcePosition,
-      targetX,
-      targetY,
-      targetPosition,
+      outputX,
+      outputY,
+      outputPosition,
+      inputX,
+      inputY,
+      inputPosition,
     });
 
     return (

@@ -138,7 +138,7 @@
   }
 }
 
-.react-flow__handle {
+.react-flow__pin {
   position: absolute;
   pointer-events: none;
   min-width: 5px;

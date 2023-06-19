@@ -1,7 +1,7 @@
 /* this will be exported as base.css and can be used for a basic styling */
 @import './init.css';
 
-.react-flow__handle {
+.react-flow__pin {
   background-color: #333;
 }
 

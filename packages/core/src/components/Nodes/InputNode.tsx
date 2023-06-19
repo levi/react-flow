@@ -1,13 +1,13 @@
 import { memo } from 'react';
 
-import Handle from '../../components/Handle';
+import Pin from '../Pin';
 import { Position } from '../../types';
 import type { NodeProps } from '../../types';
 
-const InputNode = ({ data, isConnectable, sourcePosition = Position.Bottom }: NodeProps) => (
+const InputNode = ({ data, isConnectable, outputPosition = Position.Bottom }: NodeProps) => (
   <>
     {data?.label}
-    <Handle type="source" position={sourcePosition} isConnectable={isConnectable} />
+    <Pin type="output" position={outputPosition} isConnectable={isConnectable} />
   </>
 );
 

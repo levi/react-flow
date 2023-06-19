@@ -22,8 +22,8 @@
   cursor: nesw-resize;
 }
 
-/* handle styles */
-.react-flow__resize-control.handle {
+/* pin styles */
+.react-flow__resize-control.pin {
   width: 4px;
   height: 4px;
   border: 1px solid #fff;
@@ -32,32 +32,32 @@
   transform: translate(-50%, -50%);
 }
 
-.react-flow__resize-control.handle.left {
+.react-flow__resize-control.pin.left {
   left: 0;
   top: 50%;
 }
-.react-flow__resize-control.handle.right {
+.react-flow__resize-control.pin.right {
   left: 100%;
   top: 50%;
 }
-.react-flow__resize-control.handle.top {
+.react-flow__resize-control.pin.top {
   left: 50%;
   top: 0;
 }
-.react-flow__resize-control.handle.bottom {
+.react-flow__resize-control.pin.bottom {
   left: 50%;
   top: 100%;
 }
-.react-flow__resize-control.handle.top.left {
+.react-flow__resize-control.pin.top.left {
   left: 0;
 }
-.react-flow__resize-control.handle.bottom.left {
+.react-flow__resize-control.pin.bottom.left {
   left: 0;
 }
-.react-flow__resize-control.handle.top.right {
+.react-flow__resize-control.pin.top.right {
   left: 100%;
 }
-.react-flow__resize-control.handle.bottom.right {
+.react-flow__resize-control.pin.bottom.right {
   left: 100%;
 }
 

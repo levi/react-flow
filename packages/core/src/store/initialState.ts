@@ -1,11 +1,11 @@
-import { devWarn } from '../utils';
-import { ConnectionMode } from '../types';
-import type { CoordinateExtent, ReactFlowStore } from '../types';
+import { devWarn } from '../utils'
+import { ConnectionMode } from '../types'
+import type { CoordinateExtent, ReactFlowStore } from '../types'
 
 export const infiniteExtent: CoordinateExtent = [
   [Number.NEGATIVE_INFINITY, Number.NEGATIVE_INFINITY],
   [Number.POSITIVE_INFINITY, Number.POSITIVE_INFINITY],
-];
+]
 
 const initialState: ReactFlowStore = {
   rfId: '1',
@@ -29,8 +29,8 @@ const initialState: ReactFlowStore = {
   userSelectionActive: false,
   userSelectionRect: null,
   connectionNodeId: null,
-  connectionHandleId: null,
-  connectionHandleType: 'source',
+  connectionPinId: null,
+  connectionPinType: 'output',
   connectionPosition: { x: 0, y: 0 },
   connectionStatus: null,
   connectionMode: ConnectionMode.Strict,
@@ -55,9 +55,9 @@ const initialState: ReactFlowStore = {
 
   multiSelectionActive: false,
 
-  connectionStartHandle: null,
-  connectionEndHandle: null,
-  connectionClickStartHandle: null,
+  connectionStartPin: null,
+  connectionEndPin: null,
+  connectionClickStartPin: null,
   connectOnClick: true,
 
   ariaLiveMessage: '',
@@ -66,6 +66,6 @@ const initialState: ReactFlowStore = {
   connectionRadius: 20,
   onError: devWarn,
   isValidConnection: undefined,
-};
+}
 
-export default initialState;
+export default initialState

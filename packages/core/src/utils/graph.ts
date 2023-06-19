@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { Selection as D3Selection } from 'd3';
+import type { Selection as D3Selection } from 'd3'
 
-import { boxToRect, clamp, devWarn, getBoundsOfBoxes, getOverlappingArea, rectToBox } from '../utils';
+import { boxToRect, clamp, devWarn, getBoundsOfBoxes, getOverlappingArea, rectToBox } from '../utils'
 import {
   Node,
   Edge,
@@ -13,86 +13,86 @@ import {
   NodeInternals,
   NodeOrigin,
   UpdateEdgeOptions,
-} from '../types';
-import { errorMessages } from '../contants';
+} from '../types'
+import { errorMessages } from '../contants'
 
 export const isEdge = (element: Node | Connection | Edge): element is Edge =>
-  'id' in element && 'source' in element && 'target' in element;
+  'id' in element && 'output' in element && 'input' in element
 
 export const isNode = (element: Node | Connection | Edge): element is Node =>
-  'id' in element && !('source' in element) && !('target' in element);
+  'id' in element && !('output' in element) && !('input' in element)
 
 export const getOutgoers = <T = any, U extends T = T>(node: Node<U>, nodes: Node<T>[], edges: Edge[]): Node<T>[] => {
   if (!isNode(node)) {
-    return [];
+    return []
   }
 
-  const outgoerIds = edges.filter((e) => e.source === node.id).map((e) => e.target);
-  return nodes.filter((n) => outgoerIds.includes(n.id));
-};
+  const outgoerIds = edges.filter((e) => e.output === node.id).map((e) => e.input)
+  return nodes.filter((n) => outgoerIds.includes(n.id))
+}
 
 export const getIncomers = <T = any, U extends T = T>(node: Node<U>, nodes: Node<T>[], edges: Edge[]): Node<T>[] => {
   if (!isNode(node)) {
-    return [];
+    return []
   }
 
-  const incomersIds = edges.filter((e) => e.target === node.id).map((e) => e.source);
-  return nodes.filter((n) => incomersIds.includes(n.id));
-};
+  const incomersIds = edges.filter((e) => e.input === node.id).map((e) => e.output)
+  return nodes.filter((n) => incomersIds.includes(n.id))
+}
 
-const getEdgeId = ({ source, sourceHandle, target, targetHandle }: Connection): string =>
-  `reactflow__edge-${source}${sourceHandle || ''}-${target}${targetHandle || ''}`;
+const getEdgeId = ({ outputNode, outputPin, inputNode, inputPin }: Connection): string =>
+  `reactflow__edge-${outputNode}${outputPin || ''}-${inputNode}${inputPin || ''}`
 
 export const getMarkerId = (marker: EdgeMarkerType | undefined, rfId?: string): string => {
   if (typeof marker === 'undefined') {
-    return '';
+    return ''
   }
 
   if (typeof marker === 'string') {
-    return marker;
+    return marker
   }
 
-  const idPrefix = rfId ? `${rfId}__` : '';
+  const idPrefix = rfId ? `${rfId}__` : ''
 
   return `${idPrefix}${Object.keys(marker)
     .sort()
     .map((key: string) => `${key}=${(marker as any)[key]}`)
-    .join('&')}`;
-};
+    .join('&')}`
+}
 
 const connectionExists = (edge: Edge, edges: Edge[]) => {
   return edges.some(
     (el) =>
-      el.source === edge.source &&
-      el.target === edge.target &&
-      (el.sourceHandle === edge.sourceHandle || (!el.sourceHandle && !edge.sourceHandle)) &&
-      (el.targetHandle === edge.targetHandle || (!el.targetHandle && !edge.targetHandle))
-  );
-};
+      el.output === edge.output &&
+      el.input === edge.input &&
+      (el.outputPin === edge.outputPin || (!el.outputPin && !edge.outputPin)) &&
+      (el.inputPin === edge.inputPin || (!el.inputPin && !edge.inputPin))
+  )
+}
 
 export const addEdge = (edgeParams: Edge | Connection, edges: Edge[]): Edge[] => {
-  if (!edgeParams.source || !edgeParams.target) {
-    devWarn('006', errorMessages['error006']());
+  if (!edgeParams.output || !edgeParams.input) {
+    devWarn('006', errorMessages['error006']())
 
-    return edges;
+    return edges
   }
 
-  let edge: Edge;
+  let edge: Edge
   if (isEdge(edgeParams)) {
-    edge = { ...edgeParams };
+    edge = { ...edgeParams }
   } else {
     edge = {
       ...edgeParams,
       id: getEdgeId(edgeParams),
-    } as Edge;
+    } as Edge
   }
 
   if (connectionExists(edge, edges)) {
-    return edges;
+    return edges
   }
 
-  return edges.concat(edge);
-};
+  return edges.concat(edge)
+}
 
 export const updateEdge = (
   oldEdge: Edge,
@@ -100,34 +100,34 @@ export const updateEdge = (
   edges: Edge[],
   options: UpdateEdgeOptions = { shouldReplaceId: true }
 ): Edge[] => {
-  const { id: oldEdgeId, ...rest } = oldEdge;
+  const { id: oldEdgeId, ...rest } = oldEdge
 
-  if (!newConnection.source || !newConnection.target) {
-    devWarn('006', errorMessages['error006']());
+  if (!newConnection.output || !newConnection.input) {
+    devWarn('006', errorMessages['error006']())
 
-    return edges;
+    return edges
   }
 
-  const foundEdge = edges.find((e) => e.id === oldEdgeId) as Edge;
+  const foundEdge = edges.find((e) => e.id === oldEdgeId) as Edge
 
   if (!foundEdge) {
-    devWarn('007', errorMessages['error007'](oldEdgeId));
+    devWarn('007', errorMessages['error007'](oldEdgeId))
 
-    return edges;
+    return edges
   }
 
   // Remove old edge and create the new edge with parameters of old edge.
   const edge = {
     ...rest,
     id: options.shouldReplaceId ? getEdgeId(newConnection) : oldEdgeId,
-    source: newConnection.source,
-    target: newConnection.target,
-    sourceHandle: newConnection.sourceHandle,
-    targetHandle: newConnection.targetHandle,
-  } as Edge;
+    output: newConnection.output,
+    input: newConnection.input,
+    outputPin: newConnection.outputPin,
+    inputPin: newConnection.inputPin,
+  } as Edge
 
-  return edges.filter((e) => e.id !== oldEdgeId).concat(edge);
-};
+  return edges.filter((e) => e.id !== oldEdgeId).concat(edge)
+}
 
 export const pointToRendererPoint = (
   { x, y }: XYPosition,
@@ -138,24 +138,24 @@ export const pointToRendererPoint = (
   const position: XYPosition = {
     x: (x - tx) / tScale,
     y: (y - ty) / tScale,
-  };
+  }
 
   if (snapToGrid) {
     return {
       x: snapX * Math.round(position.x / snapX),
       y: snapY * Math.round(position.y / snapY),
-    };
+    }
   }
 
-  return position;
-};
+  return position
+}
 
 export const rendererPointToPoint = ({ x, y }: XYPosition, [tx, ty, tScale]: Transform): XYPosition => {
   return {
     x: x * tScale + tx,
     y: y * tScale + ty,
-  };
-};
+  }
+}
 
 export const getNodePositionWithOrigin = (
   node: Node | undefined,
@@ -169,36 +169,36 @@ export const getNodePositionWithOrigin = (
         x: 0,
         y: 0,
       },
-    };
+    }
   }
 
-  const offsetX = (node.width ?? 0) * nodeOrigin[0];
-  const offsetY = (node.height ?? 0) * nodeOrigin[1];
+  const offsetX = (node.width ?? 0) * nodeOrigin[0]
+  const offsetY = (node.height ?? 0) * nodeOrigin[1]
 
   const position: XYPosition = {
     x: node.position.x - offsetX,
     y: node.position.y - offsetY,
-  };
+  }
 
   return {
     ...position,
     positionAbsolute: node.positionAbsolute
       ? {
-          x: node.positionAbsolute.x - offsetX,
-          y: node.positionAbsolute.y - offsetY,
-        }
+        x: node.positionAbsolute.x - offsetX,
+        y: node.positionAbsolute.y - offsetY,
+      }
       : position,
-  };
-};
+  }
+}
 
 export const getRectOfNodes = (nodes: Node[], nodeOrigin: NodeOrigin = [0, 0]): Rect => {
   if (nodes.length === 0) {
-    return { x: 0, y: 0, width: 0, height: 0 };
+    return { x: 0, y: 0, width: 0, height: 0 }
   }
 
   const box = nodes.reduce(
     (currBox, node) => {
-      const { x, y } = getNodePositionWithOrigin(node, nodeOrigin).positionAbsolute;
+      const { x, y } = getNodePositionWithOrigin(node, nodeOrigin).positionAbsolute
       return getBoundsOfBoxes(
         currBox,
         rectToBox({
@@ -207,13 +207,13 @@ export const getRectOfNodes = (nodes: Node[], nodeOrigin: NodeOrigin = [0, 0]): 
           width: node.width || 0,
           height: node.height || 0,
         })
-      );
+      )
     },
     { x: Infinity, y: Infinity, x2: -Infinity, y2: -Infinity }
-  );
+  )
 
-  return boxToRect(box);
-};
+  return boxToRect(box)
+}
 
 export const getNodesInside = (
   nodeInternals: NodeInternals,
@@ -229,46 +229,46 @@ export const getNodesInside = (
     y: (rect.y - ty) / tScale,
     width: rect.width / tScale,
     height: rect.height / tScale,
-  };
+  }
 
-  const visibleNodes: Node[] = [];
+  const visibleNodes: Node[] = []
 
   nodeInternals.forEach((node) => {
-    const { width, height, selectable = true, hidden = false } = node;
+    const { width, height, selectable = true, hidden = false } = node
 
     if ((excludeNonSelectableNodes && !selectable) || hidden) {
-      return false;
+      return false
     }
 
-    const { positionAbsolute } = getNodePositionWithOrigin(node, nodeOrigin);
+    const { positionAbsolute } = getNodePositionWithOrigin(node, nodeOrigin)
 
     const nodeRect = {
       x: positionAbsolute.x,
       y: positionAbsolute.y,
       width: width || 0,
       height: height || 0,
-    };
-    const overlappingArea = getOverlappingArea(paneRect, nodeRect);
+    }
+    const overlappingArea = getOverlappingArea(paneRect, nodeRect)
     const notInitialized =
-      typeof width === 'undefined' || typeof height === 'undefined' || width === null || height === null;
+      typeof width === 'undefined' || typeof height === 'undefined' || width === null || height === null
 
-    const partiallyVisible = partially && overlappingArea > 0;
-    const area = (width || 0) * (height || 0);
-    const isVisible = notInitialized || partiallyVisible || overlappingArea >= area;
+    const partiallyVisible = partially && overlappingArea > 0
+    const area = (width || 0) * (height || 0)
+    const isVisible = notInitialized || partiallyVisible || overlappingArea >= area
 
     if (isVisible || node.dragging) {
-      visibleNodes.push(node);
+      visibleNodes.push(node)
     }
-  });
+  })
 
-  return visibleNodes;
-};
+  return visibleNodes
+}
 
 export const getConnectedEdges = (nodes: Node[], edges: Edge[]): Edge[] => {
-  const nodeIds = nodes.map((node) => node.id);
+  const nodeIds = nodes.map((node) => node.id)
 
-  return edges.filter((edge) => nodeIds.includes(edge.source) || nodeIds.includes(edge.target));
-};
+  return edges.filter((edge) => nodeIds.includes(edge.output) || nodeIds.includes(edge.input))
+}
 
 export const getTransformForBounds = (
   bounds: Rect,
@@ -278,18 +278,18 @@ export const getTransformForBounds = (
   maxZoom: number,
   padding = 0.1
 ): Transform => {
-  const xZoom = width / (bounds.width * (1 + padding));
-  const yZoom = height / (bounds.height * (1 + padding));
-  const zoom = Math.min(xZoom, yZoom);
-  const clampedZoom = clamp(zoom, minZoom, maxZoom);
-  const boundsCenterX = bounds.x + bounds.width / 2;
-  const boundsCenterY = bounds.y + bounds.height / 2;
-  const x = width / 2 - boundsCenterX * clampedZoom;
-  const y = height / 2 - boundsCenterY * clampedZoom;
+  const xZoom = width / (bounds.width * (1 + padding))
+  const yZoom = height / (bounds.height * (1 + padding))
+  const zoom = Math.min(xZoom, yZoom)
+  const clampedZoom = clamp(zoom, minZoom, maxZoom)
+  const boundsCenterX = bounds.x + bounds.width / 2
+  const boundsCenterY = bounds.y + bounds.height / 2
+  const x = width / 2 - boundsCenterX * clampedZoom
+  const y = height / 2 - boundsCenterY * clampedZoom
 
-  return [x, y, clampedZoom];
-};
+  return [x, y, clampedZoom]
+}
 
 export const getD3Transition = (selection: D3Selection<Element, unknown, null, undefined>, duration = 0) => {
-  return selection.transition().duration(duration);
-};
+  return selection.transition().duration(duration)
+}

@@ -5,7 +5,7 @@ import cc from 'classcat';
 import { useStore } from '../../hooks/useStore';
 import useVisibleEdges from '../../hooks/useVisibleEdges';
 import MarkerDefinitions from './MarkerDefinitions';
-import { getEdgePositions, getHandle, getNodeData } from './utils';
+import { getEdgePositions, getPin, getNodeData } from './utils';
 
 import { GraphViewProps } from '../GraphView';
 import { ConnectionMode, Position } from '../../types';
@@ -88,10 +88,10 @@ const EdgeRenderer = ({
           {isMaxLevel && <MarkerDefinitions defaultColor={defaultMarkerColor} rfId={rfId} />}
           <g>
             {edges.map((edge: Edge) => {
-              const [sourceNodeRect, sourceHandleBounds, sourceIsValid] = getNodeData(nodeInternals.get(edge.source));
-              const [targetNodeRect, targetHandleBounds, targetIsValid] = getNodeData(nodeInternals.get(edge.target));
+              const [outputNodeRect, outputPinBounds, outputIsValid] = getNodeData(nodeInternals.get(edge.output));
+              const [inputNodeRect, inputPinBounds, inputIsValid] = getNodeData(nodeInternals.get(edge.input));
 
-              if (!sourceIsValid || !targetIsValid) {
+              if (!outputIsValid || !inputIsValid) {
                 return null;
               }
 
@@ -103,33 +103,33 @@ const EdgeRenderer = ({
               }
 
               const EdgeComponent = edgeTypes[edgeType] || edgeTypes.default;
-              // when connection type is loose we can define all handles as sources and connect source -> source
-              const targetNodeHandles =
+              // when connection type is loose we can define all pins as outputs and connect output -> output
+              const inputNodePins =
                 connectionMode === ConnectionMode.Strict
-                  ? targetHandleBounds!.target
-                  : (targetHandleBounds!.target ?? []).concat(targetHandleBounds!.source ?? []);
-              const sourceHandle = getHandle(sourceHandleBounds!.source!, edge.sourceHandle);
-              const targetHandle = getHandle(targetNodeHandles!, edge.targetHandle);
-              const sourcePosition = sourceHandle?.position || Position.Bottom;
-              const targetPosition = targetHandle?.position || Position.Top;
+                  ? inputPinBounds!.input
+                  : (inputPinBounds!.input ?? []).concat(inputPinBounds!.output ?? []);
+              const outputPin = getPin(outputPinBounds!.output!, edge.outputPin);
+              const inputPin = getPin(inputNodePins!, edge.inputPin);
+              const outputPosition = outputPin?.position || Position.Bottom;
+              const inputPosition = inputPin?.position || Position.Top;
               const isFocusable = !!(edge.focusable || (edgesFocusable && typeof edge.focusable === 'undefined'));
               const isUpdatable =
                 typeof onEdgeUpdate !== 'undefined' &&
                 (edge.updatable || (edgesUpdatable && typeof edge.updatable === 'undefined'));
 
-              if (!sourceHandle || !targetHandle) {
-                onError?.('008', errorMessages['error008'](sourceHandle, edge));
+              if (!outputPin || !inputPin) {
+                onError?.('008', errorMessages['error008'](outputPin, edge));
 
                 return null;
               }
 
-              const { sourceX, sourceY, targetX, targetY } = getEdgePositions(
-                sourceNodeRect,
-                sourceHandle,
-                sourcePosition,
-                targetNodeRect,
-                targetHandle,
-                targetPosition
+              const { outputX, outputY, inputX, inputY } = getEdgePositions(
+                outputNodeRect,
+                outputPin,
+                outputPosition,
+                inputNodeRect,
+                inputPin,
+                inputPosition
               );
 
               return (
@@ -149,18 +149,18 @@ const EdgeRenderer = ({
                   labelBgPadding={edge.labelBgPadding}
                   labelBgBorderRadius={edge.labelBgBorderRadius}
                   style={edge.style}
-                  source={edge.source}
-                  target={edge.target}
-                  sourceHandleId={edge.sourceHandle}
-                  targetHandleId={edge.targetHandle}
+                  output={edge.output}
+                  input={edge.input}
+                  outputPinId={edge.outputPin}
+                  inputPinId={edge.inputPin}
                   markerEnd={edge.markerEnd}
                   markerStart={edge.markerStart}
-                  sourceX={sourceX}
-                  sourceY={sourceY}
-                  targetX={targetX}
-                  targetY={targetY}
-                  sourcePosition={sourcePosition}
-                  targetPosition={targetPosition}
+                  outputX={outputX}
+                  outputY={outputY}
+                  inputX={inputX}
+                  inputY={inputY}
+                  outputPosition={outputPosition}
+                  inputPosition={inputPosition}
                   elementsSelectable={elementsSelectable}
                   onEdgeUpdate={onEdgeUpdate}
                   onContextMenu={onEdgeContextMenu}

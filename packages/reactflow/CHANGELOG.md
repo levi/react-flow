@@ -186,7 +186,7 @@ Lot's of improvements are coming with this release!
 - **Connecting radius**: No need to drop a connection line on top of handle anymore. You only need to be close to the handle. That radius can be configured with the `connectionRadius` prop.
 - **Auto pan**: When you drag a node, a selection or the connection line to the border of the pane, it will pan into that direction. That makes it easier to connect far away nodes for example. If you don't like it you can set `autoPnaOnNodeDrag` and `autoPanOnConnect` to false.
 - **Touch devices**: It's finally possibleto connect nodes with the connection line on touch devices. In combination with the new auto pan and connection radius the overall UX is way better.
-- **Errors**: We added an `onError` prop to get notified when an error like "couldn't find source handle" happens. This is useful if you want to log errors for example.
+- **Errors**: We added an `onError` prop to get notified when an error like "couldn't find output handle" happens. This is useful if you want to log errors for example.
 - **Node type**: We added a second param to the generic `Node` type. You can not only pass `NodeData` but also the type as a second param:
 
 ```ts

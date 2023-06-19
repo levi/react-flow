@@ -111,8 +111,8 @@ const NodeRenderer = (props: NodeRendererProps) => {
             style={node.style}
             type={nodeType}
             data={node.data}
-            sourcePosition={node.sourcePosition || Position.Bottom}
-            targetPosition={node.targetPosition || Position.Top}
+            outputPosition={node.outputPosition || Position.Bottom}
+            inputPosition={node.inputPosition || Position.Top}
             hidden={node.hidden}
             xPos={posX}
             yPos={posY}

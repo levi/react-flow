@@ -5,34 +5,34 @@ import { getEdgeCenter } from './utils';
 import type { EdgeProps } from '../../types';
 
 export type GetStraightPathParams = {
-  sourceX: number;
-  sourceY: number;
-  targetX: number;
-  targetY: number;
+  outputX: number;
+  outputY: number;
+  inputX: number;
+  inputY: number;
 };
 
 export function getStraightPath({
-  sourceX,
-  sourceY,
-  targetX,
-  targetY,
+  outputX,
+  outputY,
+  inputX,
+  inputY,
 }: GetStraightPathParams): [path: string, labelX: number, labelY: number, offsetX: number, offsetY: number] {
   const [labelX, labelY, offsetX, offsetY] = getEdgeCenter({
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
+    outputX,
+    outputY,
+    inputX,
+    inputY,
   });
 
-  return [`M ${sourceX},${sourceY}L ${targetX},${targetY}`, labelX, labelY, offsetX, offsetY];
+  return [`M ${outputX},${outputY}L ${inputX},${inputY}`, labelX, labelY, offsetX, offsetY];
 }
 
 const StraightEdge = memo(
   ({
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
+    outputX,
+    outputY,
+    inputX,
+    inputY,
     label,
     labelStyle,
     labelShowBg,
@@ -44,7 +44,7 @@ const StraightEdge = memo(
     markerStart,
     interactionWidth,
   }: EdgeProps) => {
-    const [path, labelX, labelY] = getStraightPath({ sourceX, sourceY, targetX, targetY });
+    const [path, labelX, labelY] = getStraightPath({ outputX, outputY, inputX, inputY });
 
     return (
       <BaseEdge

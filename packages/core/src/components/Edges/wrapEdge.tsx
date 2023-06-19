@@ -4,7 +4,7 @@ import cc from 'classcat';
 
 import { useStoreApi } from '../../hooks/useStore';
 import { ARIA_EDGE_DESC_KEY } from '../A11yDescriptions';
-import { handlePointerDown } from '../Handle/handler';
+import { handlePointerDown } from '../Pin/handler';
 import { EdgeAnchor } from './EdgeAnchor';
 import { getMarkerId } from '../../utils/graph';
 import { getMouseHandler } from './utils';
@@ -30,18 +30,18 @@ export default (EdgeComponent: ComponentType<EdgeProps>) => {
     labelBgPadding,
     labelBgBorderRadius,
     style,
-    source,
-    target,
-    sourceX,
-    sourceY,
-    targetX,
-    targetY,
-    sourcePosition,
-    targetPosition,
+    output,
+    input,
+    outputX,
+    outputY,
+    inputX,
+    inputY,
+    outputPosition,
+    inputPosition,
     elementsSelectable,
     hidden,
-    sourceHandleId,
-    targetHandleId,
+    outputPinId,
+    inputPinId,
     onContextMenu,
     onMouseEnter,
     onMouseMove,
@@ -91,48 +91,48 @@ export default (EdgeComponent: ComponentType<EdgeProps>) => {
     const onEdgeMouseMove = getMouseHandler(id, store.getState, onMouseMove);
     const onEdgeMouseLeave = getMouseHandler(id, store.getState, onMouseLeave);
 
-    const handleEdgeUpdater = (event: React.MouseEvent<SVGGElement, MouseEvent>, isSourceHandle: boolean) => {
+    const handleEdgeUpdater = (event: React.MouseEvent<SVGGElement, MouseEvent>, isInputPin: boolean) => {
       // avoid triggering edge updater if mouse btn is not left
       if (event.button !== 0) {
         return;
       }
 
       const { edges, isValidConnection: isValidConnectionStore } = store.getState();
-      const nodeId = isSourceHandle ? target : source;
-      const handleId = (isSourceHandle ? targetHandleId : sourceHandleId) || null;
-      const handleType = isSourceHandle ? 'target' : 'source';
+      const nodeId = isInputPin ? input : output;
+      const pinId = (isInputPin ? inputPinId : outputPinId) || null;
+      const pinType = isInputPin ? 'input' : 'output';
       const isValidConnection = isValidConnectionStore || alwaysValidConnection;
 
-      const isTarget = isSourceHandle;
+      const isInput = isInputPin;
       const edge = edges.find((e) => e.id === id)!;
 
       setUpdating(true);
-      onEdgeUpdateStart?.(event, edge, handleType);
+      onEdgeUpdateStart?.(event, edge, pinType);
 
       const _onEdgeUpdateEnd = (evt: MouseEvent | TouchEvent) => {
         setUpdating(false);
-        onEdgeUpdateEnd?.(evt, edge, handleType);
+        onEdgeUpdateEnd?.(evt, edge, pinType);
       };
 
       const onConnectEdge = (connection: Connection) => onEdgeUpdate?.(edge, connection);
 
       handlePointerDown({
         event,
-        handleId,
+        pinId,
         nodeId,
         onConnect: onConnectEdge,
-        isTarget,
+        isInput,
         getState: store.getState,
         setState: store.setState,
         isValidConnection,
-        edgeUpdaterType: handleType,
+        edgeUpdaterType: pinType,
         onEdgeUpdateEnd: _onEdgeUpdateEnd,
       });
     };
 
-    const onEdgeUpdaterSourceMouseDown = (event: React.MouseEvent<SVGGElement, MouseEvent>): void =>
+    const onEdgeUpdaterOutputMouseDown = (event: React.MouseEvent<SVGGElement, MouseEvent>): void =>
       handleEdgeUpdater(event, true);
-    const onEdgeUpdaterTargetMouseDown = (event: React.MouseEvent<SVGGElement, MouseEvent>): void =>
+    const onEdgeUpdaterInputMouseDown = (event: React.MouseEvent<SVGGElement, MouseEvent>): void =>
       handleEdgeUpdater(event, false);
 
     const onEdgeUpdaterMouseEnter = () => setUpdateHover(true);
@@ -172,15 +172,15 @@ export default (EdgeComponent: ComponentType<EdgeProps>) => {
         tabIndex={isFocusable ? 0 : undefined}
         role={isFocusable ? 'button' : undefined}
         data-testid={`rf__edge-${id}`}
-        aria-label={ariaLabel === null ? undefined : ariaLabel ? ariaLabel : `Edge from ${source} to ${target}`}
+        aria-label={ariaLabel === null ? undefined : ariaLabel ? ariaLabel : `Edge from ${output} to ${input}`}
         aria-describedby={isFocusable ? `${ARIA_EDGE_DESC_KEY}-${rfId}` : undefined}
         ref={edgeRef}
       >
         {!updating && (
           <EdgeComponent
             id={id}
-            source={source}
-            target={target}
+            output={output}
+            input={input}
             selected={selected}
             animated={animated}
             label={label}
@@ -191,14 +191,14 @@ export default (EdgeComponent: ComponentType<EdgeProps>) => {
             labelBgBorderRadius={labelBgBorderRadius}
             data={data}
             style={style}
-            sourceX={sourceX}
-            sourceY={sourceY}
-            targetX={targetX}
-            targetY={targetY}
-            sourcePosition={sourcePosition}
-            targetPosition={targetPosition}
-            sourceHandleId={sourceHandleId}
-            targetHandleId={targetHandleId}
+            outputX={outputX}
+            outputY={outputY}
+            inputX={inputX}
+            inputY={inputY}
+            outputPosition={outputPosition}
+            inputPosition={inputPosition}
+            outputPinId={outputPinId}
+            inputPinId={inputPinId}
             markerStart={markerStartUrl}
             markerEnd={markerEndUrl}
             pathOptions={pathOptions}
@@ -207,28 +207,28 @@ export default (EdgeComponent: ComponentType<EdgeProps>) => {
         )}
         {isUpdatable && (
           <>
-            {(isUpdatable === 'source' || isUpdatable === true) && (
+            {(isUpdatable === 'output' || isUpdatable === true) && (
               <EdgeAnchor
-                position={sourcePosition}
-                centerX={sourceX}
-                centerY={sourceY}
+                position={outputPosition}
+                centerX={outputX}
+                centerY={outputY}
                 radius={edgeUpdaterRadius}
-                onMouseDown={onEdgeUpdaterSourceMouseDown}
+                onMouseDown={onEdgeUpdaterOutputMouseDown}
                 onMouseEnter={onEdgeUpdaterMouseEnter}
                 onMouseOut={onEdgeUpdaterMouseOut}
-                type="source"
+                type="output"
               />
             )}
-            {(isUpdatable === 'target' || isUpdatable === true) && (
+            {(isUpdatable === 'input' || isUpdatable === true) && (
               <EdgeAnchor
-                position={targetPosition}
-                centerX={targetX}
-                centerY={targetY}
+                position={inputPosition}
+                centerX={inputX}
+                centerY={inputY}
                 radius={edgeUpdaterRadius}
-                onMouseDown={onEdgeUpdaterTargetMouseDown}
+                onMouseDown={onEdgeUpdaterInputMouseDown}
                 onMouseEnter={onEdgeUpdaterMouseEnter}
                 onMouseOut={onEdgeUpdaterMouseOut}
-                type="target"
+                type="input"
               />
             )}
           </>

@@ -1,54 +1,54 @@
-import { useCallback } from 'react';
+import { useCallback } from 'react'
 
-import { useStore } from '../hooks/useStore';
-import { isEdgeVisible } from '../container/EdgeRenderer/utils';
-import { internalsSymbol, isNumeric } from '../utils';
-import type { ReactFlowState, NodeInternals, Edge } from '../types';
+import { useStore } from '../hooks/useStore'
+import { isEdgeVisible } from '../container/EdgeRenderer/utils'
+import { internalsSymbol, isNumeric } from '../utils'
+import type { ReactFlowState, NodeInternals, Edge } from '../types'
 
-const defaultEdgeTree = [{ level: 0, isMaxLevel: true, edges: [] }];
+const defaultEdgeTree = [{ level: 0, isMaxLevel: true, edges: [] }]
 
 function groupEdgesByZLevel(edges: Edge[], nodeInternals: NodeInternals, elevateEdgesOnSelect = false) {
-  let maxLevel = -1;
+  let maxLevel = -1
 
   const levelLookup = edges.reduce<Record<string, Edge[]>>((tree, edge) => {
-    const hasZIndex = isNumeric(edge.zIndex);
-    let z = hasZIndex ? edge.zIndex! : 0;
+    const hasZIndex = isNumeric(edge.zIndex)
+    let z = hasZIndex ? edge.zIndex! : 0
 
     if (elevateEdgesOnSelect) {
       z = hasZIndex
         ? edge.zIndex!
         : Math.max(
-            nodeInternals.get(edge.source)?.[internalsSymbol]?.z || 0,
-            nodeInternals.get(edge.target)?.[internalsSymbol]?.z || 0
-          );
+          nodeInternals.get(edge.output)?.[internalsSymbol]?.z || 0,
+          nodeInternals.get(edge.input)?.[internalsSymbol]?.z || 0
+        )
     }
 
     if (tree[z]) {
-      tree[z].push(edge);
+      tree[z].push(edge)
     } else {
-      tree[z] = [edge];
+      tree[z] = [edge]
     }
 
-    maxLevel = z > maxLevel ? z : maxLevel;
+    maxLevel = z > maxLevel ? z : maxLevel
 
-    return tree;
-  }, {});
+    return tree
+  }, {})
 
   const edgeTree = Object.entries(levelLookup).map(([key, edges]) => {
-    const level = +key;
+    const level = +key
 
     return {
       edges,
       level,
       isMaxLevel: level === maxLevel,
-    };
-  });
+    }
+  })
 
   if (edgeTree.length === 0) {
-    return defaultEdgeTree;
+    return defaultEdgeTree
   }
 
-  return edgeTree;
+  return edgeTree
 }
 
 function useVisibleEdges(onlyRenderVisible: boolean, nodeInternals: NodeInternals, elevateEdgesOnSelect: boolean) {
@@ -56,37 +56,37 @@ function useVisibleEdges(onlyRenderVisible: boolean, nodeInternals: NodeInternal
     useCallback(
       (s: ReactFlowState) => {
         if (!onlyRenderVisible) {
-          return s.edges;
+          return s.edges
         }
 
         return s.edges.filter((e) => {
-          const sourceNode = nodeInternals.get(e.source);
-          const targetNode = nodeInternals.get(e.target);
+          const outputNode = nodeInternals.get(e.output)
+          const inputNode = nodeInternals.get(e.input)
 
           return (
-            sourceNode?.width &&
-            sourceNode?.height &&
-            targetNode?.width &&
-            targetNode?.height &&
+            outputNode?.width &&
+            outputNode?.height &&
+            inputNode?.width &&
+            inputNode?.height &&
             isEdgeVisible({
-              sourcePos: sourceNode.positionAbsolute || { x: 0, y: 0 },
-              targetPos: targetNode.positionAbsolute || { x: 0, y: 0 },
-              sourceWidth: sourceNode.width,
-              sourceHeight: sourceNode.height,
-              targetWidth: targetNode.width,
-              targetHeight: targetNode.height,
+              outputPos: outputNode.positionAbsolute || { x: 0, y: 0 },
+              inputPos: inputNode.positionAbsolute || { x: 0, y: 0 },
+              outputWidth: outputNode.width,
+              outputHeight: outputNode.height,
+              inputWidth: inputNode.width,
+              inputHeight: inputNode.height,
               width: s.width,
               height: s.height,
               transform: s.transform,
             })
-          );
-        });
+          )
+        })
       },
       [onlyRenderVisible, nodeInternals]
     )
-  );
+  )
 
-  return groupEdgesByZLevel(edges, nodeInternals, elevateEdgesOnSelect);
+  return groupEdgesByZLevel(edges, nodeInternals, elevateEdgesOnSelect)
 }
 
-export default useVisibleEdges;
+export default useVisibleEdges
